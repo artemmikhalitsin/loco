@@ -1,0 +1,13 @@
+{
+    "AppSyncApiName": "loco",
+    "AuthCognitoUserPoolId": {
+        "Fn::GetAtt": [
+            "authcognito57d076b4",
+            "Outputs.UserPoolId"
+        ]
+    },
+    "schemaGraphql": "s3://loco-20190119223721-deployment/amplify-appsync-files/schema.graphql.1547955684708",
+    "ResolverBucket": "loco-20190119223721-deployment",
+    "ResolverRootKey": "amplify-appsync-files",
+    "DeploymentTimestamp": "1547955684708"
+}

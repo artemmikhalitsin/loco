@@ -1,0 +1,12 @@
+type Todo @model {
+  type: String!
+  locX: Float!,
+  locY: Float!,
+  date: String!,
+  timeset: TimeOfDay
+}
+enum TimeOfDay {
+  nuit
+  jour
+  soir
+}

@@ -1,11 +1,9 @@
 // eslint-disable
 // this is an auto generated file. This will be overwritten
 
-export const getCrime = `query GetCrime($id: ID!) {
-  getCrime(id: $id) {
-    id
+export const getTodo = `query GetTodo($id: ID!) {
+  getTodo(id: $id) {
     type
-    description
     locX
     locY
     date
@@ -13,16 +11,14 @@ export const getCrime = `query GetCrime($id: ID!) {
   }
 }
 `;
-export const listCrimes = `query ListCrimes(
-  $filter: ModelCrimeFilterInput
+export const listTodos = `query ListTodos(
+  $filter: ModelTodoFilterInput
   $limit: Int
   $nextToken: String
 ) {
-  listCrimes(filter: $filter, limit: $limit, nextToken: $nextToken) {
+  listTodos(filter: $filter, limit: $limit, nextToken: $nextToken) {
     items {
-      id
       type
-      description
       locX
       locY
       date

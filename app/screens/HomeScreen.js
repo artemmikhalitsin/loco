@@ -78,7 +78,6 @@ export default class HomeScreen extends React.Component {
   }
 
   moveTo = (longitude, latitude) => {
-    console.log("Moving to new location");
     let newRegion = Object.assign({}, this.state.region, {
       longitude,
       latitude

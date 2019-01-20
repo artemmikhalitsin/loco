@@ -1,7 +1,8 @@
-type Todo @model {
+type Crime @model @searchable {
+  id: ID!,
   type: String!
-  locX: Float!,
-  locY: Float!,
+  lon: Float!,
+  lat: Float!,
   date: String!,
   timeset: TimeOfDay
 }
@@ -9,4 +10,21 @@ enum TimeOfDay {
   nuit
   jour
   soir
+}
+
+type Call311 @model @searchable {
+  id: ID!,
+  type: String!,
+  lon: Float!,
+  lat: Float!,
+  date: String!
+}
+
+type FoodInfraction @model @searchable {
+  id: ID!,
+  lat: Float!,
+  lon: Float!,
+  restoName: String!,
+  reason: String!,
+  fine: Float!
 }

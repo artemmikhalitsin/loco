@@ -1,7 +1,8 @@
-type Todo {
+type Crime {
+  id: ID!
   type: String!
-  locX: Float!
-  locY: Float!
+  lon: Float!
+  lat: Float!
   date: String!
   timeset: TimeOfDay
 }
@@ -12,13 +13,30 @@ enum TimeOfDay {
   soir
 }
 
+type Call311 {
+  id: ID!
+  type: String!
+  lon: Float!
+  lat: Float!
+  date: String!
+}
+
+type FoodInfraction {
+  id: ID!
+  lat: Float!
+  lon: Float!
+  restoName: String!
+  reason: String!
+  fine: Float!
+}
+
 enum ModelSortDirection {
   ASC
   DESC
 }
 
-type ModelTodoConnection {
-  items: [Todo]
+type ModelCrimeConnection {
+  items: [Crime]
   nextToken: String
 }
 
@@ -77,49 +95,289 @@ input ModelBooleanFilterInput {
   eq: Boolean
 }
 
-input ModelTodoFilterInput {
+input ModelCrimeFilterInput {
+  id: ModelIDFilterInput
   type: ModelStringFilterInput
-  locX: ModelFloatFilterInput
-  locY: ModelFloatFilterInput
+  lon: ModelFloatFilterInput
+  lat: ModelFloatFilterInput
   date: ModelStringFilterInput
-  and: [ModelTodoFilterInput]
-  or: [ModelTodoFilterInput]
-  not: ModelTodoFilterInput
+  and: [ModelCrimeFilterInput]
+  or: [ModelCrimeFilterInput]
+  not: ModelCrimeFilterInput
 }
 
 type Query {
-  getTodo(id: ID!): Todo
-  listTodos(filter: ModelTodoFilterInput, limit: Int, nextToken: String): ModelTodoConnection
+  getCrime(id: ID!): Crime
+  listCrimes(filter: ModelCrimeFilterInput, limit: Int, nextToken: String): ModelCrimeConnection
+  getCall311(id: ID!): Call311
+  listCall311s(filter: ModelCall311FilterInput, limit: Int, nextToken: String): ModelCall311Connection
+  getFoodInfraction(id: ID!): FoodInfraction
+  listFoodInfractions(filter: ModelFoodInfractionFilterInput, limit: Int, nextToken: String): ModelFoodInfractionConnection
+  searchCrimes(filter: SearchableCrimeFilterInput, sort: SearchableCrimeSortInput, limit: Int, nextToken: Int): SearchableCrimeConnection
+  searchCall311s(filter: SearchableCall311FilterInput, sort: SearchableCall311SortInput, limit: Int, nextToken: Int): SearchableCall311Connection
+  searchFoodInfractions(filter: SearchableFoodInfractionFilterInput, sort: SearchableFoodInfractionSortInput, limit: Int, nextToken: Int): SearchableFoodInfractionConnection
 }
 
-input CreateTodoInput {
+input CreateCrimeInput {
+  id: ID
   type: String!
-  locX: Float!
-  locY: Float!
+  lon: Float!
+  lat: Float!
   date: String!
   timeset: TimeOfDay
 }
 
-input UpdateTodoInput {
+input UpdateCrimeInput {
+  id: ID!
   type: String
-  locX: Float
-  locY: Float
+  lon: Float
+  lat: Float
   date: String
   timeset: TimeOfDay
 }
 
-input DeleteTodoInput {
+input DeleteCrimeInput {
   id: ID
 }
 
 type Mutation {
-  createTodo(input: CreateTodoInput!): Todo
-  updateTodo(input: UpdateTodoInput!): Todo
-  deleteTodo(input: DeleteTodoInput!): Todo
+  createCrime(input: CreateCrimeInput!): Crime
+  updateCrime(input: UpdateCrimeInput!): Crime
+  deleteCrime(input: DeleteCrimeInput!): Crime
+  createCall311(input: CreateCall311Input!): Call311
+  updateCall311(input: UpdateCall311Input!): Call311
+  deleteCall311(input: DeleteCall311Input!): Call311
+  createFoodInfraction(input: CreateFoodInfractionInput!): FoodInfraction
+  updateFoodInfraction(input: UpdateFoodInfractionInput!): FoodInfraction
+  deleteFoodInfraction(input: DeleteFoodInfractionInput!): FoodInfraction
 }
 
 type Subscription {
-  onCreateTodo: Todo @aws_subscribe(mutations: ["createTodo"])
-  onUpdateTodo: Todo @aws_subscribe(mutations: ["updateTodo"])
-  onDeleteTodo: Todo @aws_subscribe(mutations: ["deleteTodo"])
+  onCreateCrime: Crime @aws_subscribe(mutations: ["createCrime"])
+  onUpdateCrime: Crime @aws_subscribe(mutations: ["updateCrime"])
+  onDeleteCrime: Crime @aws_subscribe(mutations: ["deleteCrime"])
+  onCreateCall311: Call311 @aws_subscribe(mutations: ["createCall311"])
+  onUpdateCall311: Call311 @aws_subscribe(mutations: ["updateCall311"])
+  onDeleteCall311: Call311 @aws_subscribe(mutations: ["deleteCall311"])
+  onCreateFoodInfraction: FoodInfraction @aws_subscribe(mutations: ["createFoodInfraction"])
+  onUpdateFoodInfraction: FoodInfraction @aws_subscribe(mutations: ["updateFoodInfraction"])
+  onDeleteFoodInfraction: FoodInfraction @aws_subscribe(mutations: ["deleteFoodInfraction"])
+}
+
+type ModelCall311Connection {
+  items: [Call311]
+  nextToken: String
+}
+
+input ModelCall311FilterInput {
+  id: ModelIDFilterInput
+  type: ModelStringFilterInput
+  lon: ModelFloatFilterInput
+  lat: ModelFloatFilterInput
+  date: ModelStringFilterInput
+  and: [ModelCall311FilterInput]
+  or: [ModelCall311FilterInput]
+  not: ModelCall311FilterInput
+}
+
+input CreateCall311Input {
+  id: ID
+  type: String!
+  lon: Float!
+  lat: Float!
+  date: String!
+}
+
+input UpdateCall311Input {
+  id: ID!
+  type: String
+  lon: Float
+  lat: Float
+  date: String
+}
+
+input DeleteCall311Input {
+  id: ID
+}
+
+type ModelFoodInfractionConnection {
+  items: [FoodInfraction]
+  nextToken: String
+}
+
+input ModelFoodInfractionFilterInput {
+  id: ModelIDFilterInput
+  lat: ModelFloatFilterInput
+  lon: ModelFloatFilterInput
+  restoName: ModelStringFilterInput
+  reason: ModelStringFilterInput
+  fine: ModelFloatFilterInput
+  and: [ModelFoodInfractionFilterInput]
+  or: [ModelFoodInfractionFilterInput]
+  not: ModelFoodInfractionFilterInput
+}
+
+input CreateFoodInfractionInput {
+  id: ID
+  lat: Float!
+  lon: Float!
+  restoName: String!
+  reason: String!
+  fine: Float!
+}
+
+input UpdateFoodInfractionInput {
+  id: ID!
+  lat: Float
+  lon: Float
+  restoName: String
+  reason: String
+  fine: Float
+}
+
+input DeleteFoodInfractionInput {
+  id: ID
+}
+
+input SearchableStringFilterInput {
+  ne: String
+  eq: String
+  match: String
+  matchPhrase: String
+  matchPhrasePrefix: String
+  multiMatch: String
+  exists: Boolean
+  wildcard: String
+  regexp: String
+}
+
+input SearchableIDFilterInput {
+  ne: ID
+  eq: ID
+  match: ID
+  matchPhrase: ID
+  matchPhrasePrefix: ID
+  multiMatch: ID
+  exists: Boolean
+  wildcard: ID
+  regexp: ID
+}
+
+input SearchableIntFilterInput {
+  ne: Int
+  gt: Int
+  lt: Int
+  gte: Int
+  lte: Int
+  eq: Int
+  range: [Int]
+}
+
+input SearchableFloatFilterInput {
+  ne: Float
+  gt: Float
+  lt: Float
+  gte: Float
+  lte: Float
+  eq: Float
+  range: [Float]
+}
+
+input SearchableBooleanFilterInput {
+  eq: Boolean
+  ne: Boolean
+}
+
+input SearchableCrimeFilterInput {
+  id: SearchableIDFilterInput
+  type: SearchableStringFilterInput
+  lon: SearchableFloatFilterInput
+  lat: SearchableFloatFilterInput
+  date: SearchableStringFilterInput
+  and: [SearchableCrimeFilterInput]
+  or: [SearchableCrimeFilterInput]
+  not: SearchableCrimeFilterInput
+}
+
+enum SearchableSortDirection {
+  asc
+  desc
+}
+
+enum SearchableCrimeSortableFields {
+  id
+  type
+  lon
+  lat
+  date
+}
+
+input SearchableCrimeSortInput {
+  field: SearchableCrimeSortableFields
+  direction: SearchableSortDirection
+}
+
+type SearchableCrimeConnection {
+  items: [Crime]
+  nextToken: String
+}
+
+input SearchableCall311FilterInput {
+  id: SearchableIDFilterInput
+  type: SearchableStringFilterInput
+  lon: SearchableFloatFilterInput
+  lat: SearchableFloatFilterInput
+  date: SearchableStringFilterInput
+  and: [SearchableCall311FilterInput]
+  or: [SearchableCall311FilterInput]
+  not: SearchableCall311FilterInput
+}
+
+enum SearchableCall311SortableFields {
+  id
+  type
+  lon
+  lat
+  date
+}
+
+input SearchableCall311SortInput {
+  field: SearchableCall311SortableFields
+  direction: SearchableSortDirection
+}
+
+type SearchableCall311Connection {
+  items: [Call311]
+  nextToken: String
+}
+
+input SearchableFoodInfractionFilterInput {
+  id: SearchableIDFilterInput
+  lat: SearchableFloatFilterInput
+  lon: SearchableFloatFilterInput
+  restoName: SearchableStringFilterInput
+  reason: SearchableStringFilterInput
+  fine: SearchableFloatFilterInput
+  and: [SearchableFoodInfractionFilterInput]
+  or: [SearchableFoodInfractionFilterInput]
+  not: SearchableFoodInfractionFilterInput
+}
+
+enum SearchableFoodInfractionSortableFields {
+  id
+  lat
+  lon
+  restoName
+  reason
+  fine
+}
+
+input SearchableFoodInfractionSortInput {
+  field: SearchableFoodInfractionSortableFields
+  direction: SearchableSortDirection
+}
+
+type SearchableFoodInfractionConnection {
+  items: [FoodInfraction]
+  nextToken: String
 }

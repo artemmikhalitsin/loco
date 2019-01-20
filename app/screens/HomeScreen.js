@@ -142,11 +142,19 @@ export default class HomeScreen extends React.Component {
       .then(res => res.json())
     let foodData = fetch(`http://3.82.226.23:1880/badfood?lat=${lat}&lon=${lon}`)
       .then(res => res.json())
-    Promise.all([crimeData, walkscoreData, foodData])
-    .then(([crimes, walk, food]) => {
+    let metroData = fetch(`http://3.82.226.23:1880/metro?lat=${lat}&lon=${lon}`)
+      .then(res => res.json())
+    Promise.all([crimeData, walkscoreData, foodData, metroData])
+    .then(([crimes, walk, food, metros]) => {
       let description = ''
       description += `Walk score: ${walk.walkscore} (${walk.description})\n`
       description += `Bike score: ${walk.bikescore} (${walk.bikedescription})\n\n`
+
+      description += 'Nearby metro stations: \n'
+      metros.map(metro => {
+        description += `- ${metro.station} (${metro.walkingDistance} walk) \n`
+      });
+      description += '\n'
 
       let totalCrimes = crimes.items.length
       description += `Crimes since 2015: ${totalCrimes}\n`

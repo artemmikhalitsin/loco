@@ -1,65 +1,222 @@
 import React from 'react';
 import {
+  Button,
   Image,
   Platform,
   ScrollView,
   StyleSheet,
-  Text,
+  TextInput,
   TouchableOpacity,
   View,
+  KeyboardAvoidingView
 } from 'react-native';
-import { WebBrowser } from 'expo';
-
+import {
+  Constants,
+  Location,
+  Permissions,
+  MapView,
+  WebBrowser
+} from 'expo';
+import { Marker } from 'react-native-maps';
+import { Toast } from 'native-base';
+import {
+  Text,
+  Overlay,
+  Input
+} from 'react-native-elements';
 import { MonoText } from '../components/StyledText';
+import { _ } from 'lodash';
 
 export default class HomeScreen extends React.Component {
+  state = {
+      region: {
+        latitude: 37.78825,
+        longitude: -122.4324,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      },
+      searchText: '',
+      viewedLocation: {},
+      viewedLocationStats: '',
+      errorMessage: null,
+      overlayVisible: false,
+      showToast: false
+    };
+
   static navigationOptions = {
     header: null,
   };
 
+  componentWillMount() {
+    if (Platform.OS === 'android' && !Constants.isDevice) {
+      this.setState({
+        errorMessage: 'Oops, this will not work on Sketch in an Android emulator. Try it on your device!',
+      });
+    } else {
+      this._getLocationAsync();
+    }
+  }
+
+  _getLocationAsync = async () => {
+    let { status } = await Permissions.askAsync(Permissions.LOCATION);
+    if (status !== 'granted') {
+      this.setState({
+        errorMessage: 'Permission to access location was denied',
+      });
+    }
+
+    let location = await Location.getCurrentPositionAsync({});
+    this.moveTo(location.coords.longitude, location.coords.latitude);
+  };
+
+  onRegionChangeComplete = (region) => {
+    this.setState({ region });
+  }
+
+  toggleOverlay = () => {
+    this.setState({ overlayVisible: !this.state.overlayVisible})
+  }
+
+  moveTo = (longitude, latitude) => {
+    console.log("Moving to new location");
+    let newRegion = Object.assign({}, this.state.region, {
+      longitude,
+      latitude
+    })
+    this.setState({ region: newRegion });
+  }
+
+  drawMarker = (marker) => {
+    if(!marker || !marker.location) {
+      return null;
+    }
+
+    return (<Marker
+      coordinate={marker.location}
+      title={marker.title}
+      description={marker.description}
+      onCalloutPress={this.toggleOverlay}
+    />)
+  }
+
+  onSubmitSearch = () => {
+    if(this.state.searchText.length < 2) {
+      Toast.show({
+        text: 'Please be more specific',
+        buttonText: 'Dismiss',
+        duration: 2000
+      })
+
+      return
+    }
+    fetch(`http://3.82.226.23:1880/maps?lat=${this.state.region.latitude}` +
+    `&lon=${this.state.region.longitude}&query=${this.state.searchText}`)
+    .then(res => res.json())
+    .then(results => {
+      if(results.length > 0) {
+        let bestMatch = results[0];
+        this.setState({viewedLocation : {
+          location: {
+            longitude: bestMatch.geometry.location.lng,
+            latitude: bestMatch.geometry.location.lat
+          },
+          title: bestMatch.formatted_address,
+          description: "Tap to view the rating"
+        }})
+        this.loadLocationStats(bestMatch.geometry.location.lng, bestMatch.geometry.location.lat);
+        this.moveTo(bestMatch.geometry.location.lng, bestMatch.geometry.location.lat);
+      } else {
+        Toast.show({
+          text: 'No results found. Try being more specific',
+          buttonText: 'Dismiss',
+          duration: 3000
+        })
+      }
+    })
+  }
+
+  loadLocationStats = (lon, lat) => {
+    let crimeData = fetch(`http://3.82.226.23:1880/crimes?lat=${lat}&lon=${lon}`)
+      .then(res => res.json())
+    let walkscoreData = fetch(`http://3.82.226.23:1880/walkscore?lat=${lat}&lon=${lon}`)
+      .then(res => res.json())
+    let foodData = fetch(`http://3.82.226.23:1880/badfood?lat=${lat}&lon=${lon}`)
+      .then(res => res.json())
+    Promise.all([crimeData, walkscoreData, foodData])
+    .then(([crimes, walk, food]) => {
+      let description = ''
+      description += `Walk score: ${walk.walkscore} (${walk.description})\n`
+      description += `Bike score: ${walk.bikescore} (${walk.bikedescription})\n\n`
+
+      let totalCrimes = crimes.items.length
+      description += `Crimes since 2015: ${totalCrimes}\n`
+      let groupedCrimes = _.groupBy(crimes.items, 'type')
+      let crimeStats = ''
+      _.keys(groupedCrimes).map(crimeType => {
+        let typeCount = groupedCrimes[crimeType].length;
+        let portion = ( typeCount / totalCrimes).toFixed(4) * 100;
+        crimeStats += `${crimeType}: ${portion}% \n`
+      })
+      description += `Crimes breakdown:\n`
+      description += crimeStats + '\n'
+
+      // Bad food
+      let totalViolations = food.items.length
+      description += `Nearby resto health code violations: ${totalViolations}\n`
+      description += `Restos to avoid:\n`
+      let restos = _.groupBy(food.items, 'restoName')
+      _.keys(restos).map(restoName => {
+        description += `${restoName}: ${restos[restoName].length} violations\n`
+      })
+      this.setState({ viewedLocationStats: description })
+    });
+  }
+
   render() {
     return (
       <View style={styles.container}>
-        <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-          <View style={styles.welcomeContainer}>
-            <Image
-              source={
-                __DEV__
-                  ? require('../assets/images/robot-dev.png')
-                  : require('../assets/images/robot-prod.png')
-              }
-              style={styles.welcomeImage}
-            />
-          </View>
-
-          <View style={styles.getStartedContainer}>
-            {this._maybeRenderDevelopmentModeWarning()}
-
-            <Text style={styles.getStartedText}>Get started by opening</Text>
-
-            <View style={[styles.codeHighlightContainer, styles.homeScreenFilename]}>
-              <MonoText style={styles.codeHighlightText}>screens/HomeScreen.js</MonoText>
-            </View>
-
-            <Text style={styles.getStartedText}>
-              Change this text and your app will automatically reload.
-            </Text>
-          </View>
-
-          <View style={styles.helpContainer}>
-            <TouchableOpacity onPress={this._handleHelpPress} style={styles.helpLink}>
-              <Text style={styles.helpLinkText}>Help, it didn’t automatically reload!</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-
-        <View style={styles.tabBarInfoContainer}>
-          <Text style={styles.tabBarInfoText}>This is a tab bar. You can edit it in:</Text>
-
-          <View style={[styles.codeHighlightContainer, styles.navigationFilename]}>
-            <MonoText style={styles.codeHighlightText}>navigation/MainTabNavigator.js</MonoText>
-          </View>
-        </View>
+        <MapView
+          style={{
+            flex: 1,
+            zIndex: -1
+          }}
+          region={this.state.region}
+          onRegionChangeComplete={this.onRegionChange}
+          initialRegion={{
+            latitude: 37.78825,
+            longitude: -122.4324,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+        >
+          {this.drawMarker(this.state.viewedLocation)}
+        </MapView>
+        <KeyboardAvoidingView
+          style={styles.tabBarInfoContainer}
+          behavior="padding">
+          <Input
+            style={{
+              borderWidth: 0
+            }}
+            placeholder='Find a new spot'
+            rightIcon={{ type: 'font-awesome', name: 'search' }}
+            onChangeText={(searchText) => this.setState({searchText})}
+            onSubmitEditing={this.onSubmitSearch}
+            value={this.state.searchText}
+          />
+        </KeyboardAvoidingView>
+        <Overlay
+          isVisible={this.state.overlayVisible}
+          windowBackgroundColor="rgba(255, 255, 255, .5)"
+          width="auto"
+          height="auto"
+          >
+            <Text h4 style={{
+              alignSelf: 'center'
+            }}>{this.state.viewedLocation.title}</Text>
+            <Text>{this.state.viewedLocationStats}</Text>
+          <Button title="Close" onPress={this.toggleOverlay}/>
+        </Overlay>
       </View>
     );
   }
@@ -164,7 +321,7 @@ const styles = StyleSheet.create({
     }),
     alignItems: 'center',
     backgroundColor: '#fbfbfb',
-    paddingVertical: 20,
+    paddingVertical: 10,
   },
   tabBarInfoText: {
     fontSize: 17,
